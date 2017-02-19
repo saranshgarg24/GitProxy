@@ -2,28 +2,29 @@ package com.saransh.app.gitproxy;
 
 import android.util.Log;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class JSONParser {
 
@@ -39,20 +40,61 @@ public class JSONParser {
 
         try {
 
-            DefaultHttpClient httpClient = new DefaultHttpClient();
-            HttpPost httpPost = new HttpPost(url);
-            if(params != null)
-                httpPost.setEntity(new UrlEncodedFormEntity(params));
+            URL urls= new URL(url);
+            JSONObject postDataParams = new JSONObject();
+            postDataParams.put("name", "abc");
+            postDataParams.put("email", "abc@gmail.com");
 
-            HttpResponse httpResponse = httpClient.execute(httpPost);
-            HttpEntity httpEntity = httpResponse.getEntity();
-            is = httpEntity.getContent();
+            Log.d("url", String.valueOf(urls));
+            Log.e("params",params.toString());
 
+            HttpURLConnection conn = (HttpURLConnection) urls.openConnection();
+            conn.setReadTimeout(15000 /* milliseconds */);
+            conn.setConnectTimeout(15000 /* milliseconds */);
+            conn.setRequestMethod("POST");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+
+            OutputStream os = conn.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(os, "UTF-8"));
+            writer.write(getQuery(params));
+
+            writer.flush();
+            writer.close();
+            os.close();
+
+            int responseCode=conn.getResponseCode();
+
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+
+                BufferedReader in=new BufferedReader(new
+                        InputStreamReader(
+                        conn.getInputStream()));
+
+                StringBuffer sb = new StringBuffer("");
+                String line="";
+
+                while((line = in.readLine()) != null) {
+
+                    sb.append(line);
+                    break;
+                }
+
+                in.close();
+                return sb.toString();
+
+            }
+            else {
+                return new String("false : "+responseCode);
+            }
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
             e.printStackTrace();
         }
 
@@ -82,62 +124,73 @@ public class JSONParser {
         return json;
 
     }
-    public JSONObject getJSONFromArray (String url, JSONArray message) {
 
-        URL obj = null;
-        StringBuffer response = null;
-        try {
-            obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setReadTimeout(15000);
-            con.setConnectTimeout(20000);
-            //add reuqest header
-            //add reuqest header
-            con.setRequestMethod("POST");
-            con.setDoOutput(true);
-            con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("X-Requested-With", "XMLHttpRequest");
-            con.connect();
-            //con.setFixedLengthStreamingMode(message.getBytes().length);
-            //  String urlParameters = "sn=C02G8416DRJM&cn=&locale=&caller=&num=12345";
+    private String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException
+    {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
 
-            // Send post request
+        for (NameValuePair pair : params)
+        {
+            if (first)
+                first = false;
+            else
+                result.append("&");
 
-            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-            //    wr.writeBytes(urlParameters);
-            wr.write(message.toString().getBytes());
-            wr.flush();
-            wr.close();
-            int responseCode = con.getResponseCode();
-            Log.d(" URL :", url);
-            // Log.d("Post parameters : ",urlParameters);
-
-
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            response = new StringBuffer();
-
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-            }
-            in.close();
-            Log.d("Response : ", String.valueOf(response));
-            jObj = new JSONObject(String.valueOf(response));
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
+            result.append(URLEncoder.encode(pair.getName(), "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(pair.getValue(), "UTF-8"));
         }
 
-        return jObj;
+        return result.toString();
     }
+
+        public JSONArray getJSONFromUrl(String url) {
+
+            String USER_AGENT = "Mozilla/5.0";
+            StringBuffer response = new StringBuffer();
+            JSONArray jsonObject = null;
+            URL obj = null;
+            try {
+                obj = new URL(url);
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+                // optional default is GET
+                con.setRequestMethod("GET");
+
+                //add request header
+                con.setRequestProperty("User-Agent", USER_AGENT);
+                int responseCode = con.getResponseCode();
+                Log.d("Sending 'GET'", url);
+                Log.d("Response Code : ", String.valueOf(responseCode));
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                jsonObject = new JSONArray(String.valueOf(response));
+                in.close();
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (ProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+            //print result
+            return jsonObject;
+
+        }
+
 
     public JSONObject getJSONFromGet(String url) {
 

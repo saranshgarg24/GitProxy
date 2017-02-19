@@ -1,5 +1,6 @@
 package com.saransh.app.gitproxy;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -23,10 +24,11 @@ public class Login extends AppCompatActivity {
     public static String OAUTH_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token";
 
     public static String CLIENT_ID = "27df83cfb3490de690de";
-    public static String CLIENT_SECRET = "bd23029ed0c6126a57fa185cf6999b73e37e4acb";
+    public static String CLIENT_SECRET = "5937492d477bba7b64e7f57cb626e56277213878";
     public static String CALLBACK_URL = "https://gitproxy-aaf55.firebaseapp.com/__/auth/handler";
 
     String accessCode;
+    public  static String accessToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +67,9 @@ public class Login extends AppCompatActivity {
                     accessCode = accessCode.replaceAll("code=","").replaceAll("&state=","");
                     Log.d("accessCode",accessCode);
 
-                    String query = "client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&code=" + accessCode + "&state=";
+                    String query = "client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&" + accessCode;
+
+                    Log.d("query",query);
                     view.postUrl(OAUTH_ACCESS_TOKEN_URL, query.getBytes());
 
                     new SendPostRequest().execute();
@@ -94,14 +98,25 @@ public class Login extends AppCompatActivity {
             if (response != null)
             {
                 Log.d("response", String.valueOf(response));
+                String s[] = response.split("&");
+                accessToken = s[0];
+                accessToken = accessToken.replaceAll("access_token=","");
+                Log.d("accesstoken",accessToken);
                 return "ok";
             }
             return null;
         }
         @Override
         protected void onPostExecute(String k) {
+            if (k != null){
+                Intent i = new Intent(Login.this,MainActivity.class);
+                i.putExtra("accesstoken",accessToken);
+                startActivity(i);
+            }else {
                 Toast.makeText(getApplicationContext(), "no internet"
                         , Toast.LENGTH_SHORT).show();
+            }
+
 
         }
 
