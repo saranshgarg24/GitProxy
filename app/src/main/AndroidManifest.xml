@@ -26,7 +26,8 @@
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme" />
-        <activity android:name=".Commits"></activity>
+        <activity android:name=".Commits" />
+        <activity android:name=".PCommit"></activity>
     </application>
 
 </manifest>

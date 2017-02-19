@@ -8,6 +8,7 @@
     tools:context="com.saransh.app.gitproxy.Commits"
     android:orientation="vertical">
 <android.support.v7.widget.Toolbar
+    android:id="@+id/toolbar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/colorPrimary"
@@ -24,6 +25,7 @@
         android:id="@+id/btn_back"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
         android:layout_gravity="left"
         android:padding="5dp"
         android:src="@drawable/ic_arrow_back_white_36dp"/>
@@ -31,6 +33,7 @@
             android:id="@+id/repo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
             android:shadowColor="@android:color/darker_gray"
             android:layout_gravity="center"
             android:shadowDx="3"
@@ -45,5 +48,5 @@
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:listitem="@layout/list_item"/>
+        tools:listitem="@layout/commit_item"/>
 </LinearLayout>
