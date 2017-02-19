@@ -1,9 +1,12 @@
 package com.saransh.app.gitproxy;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -12,6 +15,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.wang.avi.AVLoadingIndicatorView;
 
 import org.json.JSONArray;
 
@@ -23,6 +28,7 @@ public class Commits extends AppCompatActivity {
     String repo;
     String AccessToken;
     RecyclerView r_list;
+    AVLoadingIndicatorView loader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +37,7 @@ public class Commits extends AppCompatActivity {
         Intent i = getIntent();
         owners = i.getStringExtra("owner");
         repo = i.getStringExtra("repo");
+        loader = (AVLoadingIndicatorView)findViewById(R.id.avi);
 
         initToolbar();
 
@@ -38,7 +45,19 @@ public class Commits extends AppCompatActivity {
 
         repotitle.setText(repo);
 
-        new getCommits().execute();
+        ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+
+        if(ni == null)
+        {
+            Toast.makeText(getApplicationContext(), "Can't Connect to the Internet", Toast.LENGTH_LONG).show();
+
+        }
+        else {
+
+            new getCommits().execute();
+        }
 
         initList();
 
@@ -65,6 +84,13 @@ public class Commits extends AppCompatActivity {
     class getCommits extends AsyncTask<Object, Object, JSONArray> {
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            loader.smoothToShow(); //showing the loader
+
+
+        }
+        @Override
         protected JSONArray doInBackground(Object... args) {
 
             JSONParser jsonParser = new JSONParser();
@@ -82,6 +108,7 @@ public class Commits extends AppCompatActivity {
         }
         @Override
         protected void onPostExecute(JSONArray k) {
+            loader.hide();
             if (k != null){
                 Log.d("response", String.valueOf(k));
                 CommitAdapter recyclerAdapter = new CommitAdapter(getApplicationContext(),k);

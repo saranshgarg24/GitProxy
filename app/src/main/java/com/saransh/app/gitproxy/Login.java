@@ -1,7 +1,10 @@
 package com.saransh.app.gitproxy;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -72,8 +75,18 @@ public class Login extends AppCompatActivity {
                     Log.d("query",query);
                     view.postUrl(OAUTH_ACCESS_TOKEN_URL, query.getBytes());
 
-                    new SendPostRequest().execute();
+                    ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 
+                    NetworkInfo ni = cm.getActiveNetworkInfo();
+
+                    if(ni == null)
+                    {
+                        Toast.makeText(getApplicationContext(), "Can't Connect to the Internet", Toast.LENGTH_LONG).show();
+                    }
+                    else {
+
+                        new SendPostRequest().execute();
+                    }
                 }
             }
         });

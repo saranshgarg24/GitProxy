@@ -60,7 +60,7 @@ public class CommitAdapter extends RecyclerView.Adapter<CommitAdapter.ViewHolder
         holder.layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(r_context,Commits.class);
+                Intent i = new Intent(r_context,PCommit.class);
                 i.putExtra("url",htmlurl.get(position));
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 r_context.startActivity(i);
